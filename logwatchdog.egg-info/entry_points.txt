@@ -1,0 +1,2 @@
+[console_scripts]
+logwatchdog = watcher.cli:main

@@ -1,0 +1,13 @@
+README.md
+setup.py
+logwatchdog.egg-info/PKG-INFO
+logwatchdog.egg-info/SOURCES.txt
+logwatchdog.egg-info/dependency_links.txt
+logwatchdog.egg-info/entry_points.txt
+logwatchdog.egg-info/requires.txt
+logwatchdog.egg-info/top_level.txt
+watcher/__init__.py
+watcher/ai.py
+watcher/cli.py
+watcher/config.py
+watcher/core.py
