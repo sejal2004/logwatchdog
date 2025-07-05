@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  watcher:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./logs:/logs
+      - "/c/Users/Sejal Jain/.kube:/root/.kube"
+      - "/c/Users/Sejal Jain/.minikube:/root/.minikube"
+    environment:
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
+      - SLACK_CHANNEL=${SLACK_CHANNEL}
+      - KUBECONFIG=/root/.kube/config.docker
+    container_name: logwatchdog-watcher
+    command: [
+      "--namespace", "default",
+      "--label-selector", "app=logwatchdog"
+    ]

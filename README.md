@@ -1,24 +1,28 @@
-# LogWatchdog 🐶  
-**AI-Powered Kubernetes Log Monitoring & Auto-Healing Tool**
+# LogWatchdog 🐶
 
-LogWatchdog is a lightweight, pluggable CLI tool that watches your Kubernetes logs in real-time, detects anomalies using LLMs (OpenAI, Mistral, Claude), and auto-heals your containers using smart restart logic.
+> **AI-Powered Kubernetes Log Monitoring & Auto-Healing CLI Tool**
 
-> Think Grafana meets GPT for logs — but CLI-native and AI-native.
+LogWatchdog is a lightweight, plug-and-play CLI that watches your Kubernetes pod logs in real-time, detects anomalies using LLMs (like OpenAI, Mistral, Claude), and auto-heals failing containers using smart restart logic.
+
+> 🧠 Think **Grafana meets GPT for logs** — but fully CLI-native and AI-native.
 
 ---
 
 ## 🚀 Features
 
-- Real-time Kubernetes log monitoring
-- LLM-based root cause analysis
-- Auto-restart containers on crash
-- Optional Slack alerts
-- Supports `config.yaml` for full control
-- Works with OpenAI, Mistral, Claude via ENV variables
+- 📡 Real-time Kubernetes log monitoring (via stdout or file)
+- 🤖 LLM-based root cause diagnosis (OpenAI / Mistral / Claude)
+- 🔁 Auto-restart pods with `kubectl` on failure
+- 📣 Optional Slack alerts
+- 🧩 YAML-based config support (`config.yaml`)
+- ⚙️ Dry-run mode for safe testing
+- ☁️ Fully containerized via Docker & deployable to any K8s cluster
 
 ---
 
 ## 📦 Installation
 
+Install via `pip` (after cloning or publishing to PyPI):
+
 ```bash
-pip install logwatchdog
+pip install .

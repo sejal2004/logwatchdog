@@ -4,15 +4,20 @@ setup(
     name='logwatchdog',
     version='0.1.0',
     description='AI-powered Kubernetes log monitoring and auto-healing tool',
-    author='Aviral Jain',
+    author='Sejal Jain',
     author_email='your@email.com',
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-        'kubernetes',
-        'requests',
+        'slack_sdk',        # ✅ correct
+        'python-dotenv',    # ✅ correct
+        'openai',
         'pyyaml',
-        'python-dotenv'
+        'kubernetes',
+        'fastapi',
+        'uvicorn',
+        'prometheus_client'
+
     ],
     entry_points={
         'console_scripts': [

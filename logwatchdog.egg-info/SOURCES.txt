@@ -1,3 +1,4 @@
+LICENSE
 README.md
 setup.py
 logwatchdog.egg-info/PKG-INFO
@@ -11,3 +12,4 @@ watcher/ai.py
 watcher/cli.py
 watcher/config.py
 watcher/core.py
+watcher/setup.py

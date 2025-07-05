@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logwatchdog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logwatchdog
+  template:
+    metadata:
+      labels:
+        app: logwatchdog
+    spec:
+      serviceAccountName: logwatchdog-sa  # 👈 Add this line
+      containers:
+        - name: logwatchdog
+          image: sejal2004/logwatchdog:v4
+          imagePullPolicy: Always
+          args:
+            - "--namespace=default"
+            - "--label-selector=app=crashy"

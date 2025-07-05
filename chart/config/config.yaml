@@ -1,0 +1,2 @@
+restart_cooldown: 60
+slack_webhook: "https://hooks.slack.com/services/your-fake-key"

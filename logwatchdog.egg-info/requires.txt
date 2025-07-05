@@ -1,4 +1,5 @@
-kubernetes
-requests
-pyyaml
+slack_sdk
 python-dotenv
+openai
+pyyaml
+kubernetes

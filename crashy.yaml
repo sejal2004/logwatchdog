@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crashy-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: crashy
+  template:
+    metadata:
+      labels:
+        app: crashy
+    spec:
+      containers:
+        - name: crashy-container
+          image: busybox:1.35
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              while true; do
+                echo "$(date) ERROR: Simulated crash log";
+                sleep 5;
+              done

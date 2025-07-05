@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logwatchdog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logwatchdog
+  template:
+    metadata:
+      labels:
+        app: logwatchdog
+    spec:
+      serviceAccountName: logwatchdog-sa
+      containers:  
+        - name: logwatchdog
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          args:
+            - "--namespace={{ .Values.namespace }}"
+            - "--label-selector={{ .Values.label }}"
+            - "--config=/app/config.yaml"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/config.yaml
+              subPath: config.yaml
+          ports:
+            - containerPort: 8000
+      volumes:
+        - name: config-volume
+          configMap:
+            name: logwatchdog-config

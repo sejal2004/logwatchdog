@@ -1,0 +1,10 @@
+slack_sdk
+python-dotenv
+kubernetes
+pyyaml
+httpx
+mistralai
+fastapi
+uvicorn
+prometheus_client
+

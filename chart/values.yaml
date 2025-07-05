@@ -1,0 +1,14 @@
+image:
+  repository: sejal2004/logwatchdog
+  tag: latest
+  pullPolicy: Always
+
+namespace: default
+label: app=crashy
+
+config:
+  ai_provider: mistral
+  restart_cooldown: 60
+  slack:
+    token: ""
+    channel: ""

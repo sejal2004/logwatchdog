@@ -2,18 +2,21 @@ Metadata-Version: 2.4
 Name: logwatchdog
 Version: 0.1.0
 Summary: AI-powered Kubernetes log monitoring and auto-healing tool
-Author: Aviral Jain
+Author: Sejal Jain
 Author-email: your@email.com
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
 Requires-Python: >=3.7
-Requires-Dist: kubernetes
-Requires-Dist: requests
-Requires-Dist: pyyaml
+License-File: LICENSE
+Requires-Dist: slack_sdk
 Requires-Dist: python-dotenv
+Requires-Dist: openai
+Requires-Dist: pyyaml
+Requires-Dist: kubernetes
 Dynamic: author
 Dynamic: author-email
 Dynamic: classifier
+Dynamic: license-file
 Dynamic: requires-dist
 Dynamic: requires-python
 Dynamic: summary
