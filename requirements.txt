@@ -53,7 +53,6 @@ langchain==0.3.26
 langchain-core==0.3.68
 langchain-text-splitters==0.3.8
 langsmith==0.4.4
--e git+https://github.com/sejal2004/logwatchdog.git@8d91c6db50e6d55f1590361acccb7d7010d0afa9#egg=logwatchdog
 markdown-it-py==3.0.0
 MarkupSafe==3.0.2
 mdurl==0.1.2
