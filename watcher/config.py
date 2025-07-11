@@ -20,3 +20,9 @@ def load_config(path="config.yaml"):
     
     return config
 
+  # embedder/vectorstore defaults:
+    config.setdefault("embedding_model",  os.getenv("EMBEDDING_MODEL", config.get("embedding_model", "text-embedding-ada-002")))
+    config.setdefault("vectorstore_type", os.getenv("VECTORSTORE_TYPE",  config.get("vectorstore_type",  "faiss")))
+    config.setdefault("vectorstore_path", os.getenv("VECTORSTORE_PATH",  config.get("vectorstore_path",  "data/faiss.index")))
+
+    return config

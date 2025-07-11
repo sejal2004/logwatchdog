@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RemediationSuggestionPrompt",
+  "type": "object",
+  "properties": {
+    "logs_excerpt": {
+      "type": "string",
+      "description": "A snippet of relevant logs to diagnose"
+    },
+    "pod_name": {
+      "type": "string",
+      "description": "The name of the pod under investigation"
+    },
+    "namespace": {
+      "type": "string",
+      "description": "The Kubernetes namespace of the pod"
+    }
+  },
+  "required": ["logs_excerpt", "pod_name", "namespace"],
+  "additionalProperties": false
+}

@@ -13,9 +13,15 @@ from fastapi.responses import JSONResponse
 from watcher.ai import ai_suggest
 from kubernetes import client, config as k8s_config
 from pydantic import BaseModel
+from watcher.config    import load_config
+from watcher.embeddings import init_embedder
+from watcher.retriever  import init_vectorstore
+from watcher.models.suggestion import Suggestion
+
 
 
 app = FastAPI()
+cfg = load_config(path="config.yaml")
 
 
 # CORS settings to connect frontend
@@ -103,7 +109,7 @@ def get_restarted_pods():
 
 
 # — AI-driven suggestion endpoint
-@app.post("/api/suggestion")
+@app.post("/api/suggestion", response_model=Suggestion)
 async def suggestion_endpoint(payload: dict = Body(...)):
     # 1) Extract fields
     try:
@@ -123,9 +129,19 @@ async def suggestion_endpoint(payload: dict = Body(...)):
     if asyncio.iscoroutine(result):
         result = await result
 
-    # 5) If it’s a Pydantic model (has .dict), unwrap it
-    if hasattr(result, "dict"):
-        return result.dict()
+    # 5) Turn that dict into a Suggestion (fills in missing keys if needed)
+    try:
+        suggestion = Suggestion.parse_obj(result)
+    except Exception:
+        # fallback when ai_suggest returned {"action": "..."}
+        action = result.get("action", "")
+        suggestion = Suggestion(
+            suggestion = action,
+            severity   = "medium",
+            confidence = 0.0,
+            remediation= ""
+        )
+    return suggestion
 
     # 6) Otherwise assume it's already a dict
     return result
@@ -139,4 +155,7 @@ async def suggestion_endpoint(payload: dict = Body(...)):
     from watcher.chains.agent import run_troubleshooter
     ai_response = await run_troubleshooter(logs, pod_name, namespace)
 
-    return {"agent_response": ai_response}    
+    return {"agent_response": ai_response}  
+
+embed_model  = init_embedder(cfg)
+vectorstore  = init_vectorstore(cfg, embed_model)

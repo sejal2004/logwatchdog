@@ -1,6 +1,20 @@
-# watcher/chains/retriever.py
 import os
-from watcher.chains.embeddings import vectorstore
+from watcher.chains.embeddings import embeddings, vectorstore
+
+def search_logs(query: str, top_k: int = 5) -> list[str]:
+    """
+    Embed the query, retrieve the top_k most similar log chunks,
+    and return their text content.
+    """
+    # 1) Make a query vector
+    query_vec = embeddings.embed(query)
+
+    # 2) Search the vectorstore
+    results = vectorstore.similarity_search_by_vector(query_vec, k=top_k)
+
+    # 3) Return the page_content of each Document
+    return [doc.page_content for doc in results]
+
 
 # Attempt to import and build a real QA chain
 try:
@@ -22,8 +36,16 @@ except Exception:
 
     qa_chain = QAStub()
 
+
 async def retrieve_related(log_excerpt: str) -> str:
     """
     Returns an LLM-driven answer to: "Given this log, what similar events happened before?"
     """
     return await qa_chain.arun(log_excerpt)
+
+def init_vectorstore(cfg, embed_model):
+    """
+    Return the pre-configured vectorstore.
+    Allows app/main.py to call init_vectorstore(cfg, embed_model).
+    """
+    return vectorstore

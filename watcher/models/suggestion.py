@@ -1,4 +1,3 @@
-# watcher/models/suggestion.py
 from pydantic import BaseModel, Field
 from typing import Literal
 

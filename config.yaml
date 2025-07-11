@@ -1,0 +1,6 @@
+# config.yaml
+embedding_model: text-embedding-ada-002
+vectorstore_type:  faiss
+vectorstore_path:  data/faiss.index
+vectorstore_type: chroma
+vectorstore_path: db/chroma

@@ -32,6 +32,7 @@ OPENAI_KEY    = os.getenv("OPENAI_API_KEY")
 MISTRAL_URL   = "https://api.mistral.ai/v1/chat/completions"
 OPENAI_URL    = "https://api.openai.com/v1/chat/completions"
 
+
 def ai_suggest(logs_excerpt: str, pod_name: str, namespace: str) -> dict:
     """
     Returns a dict matching the Suggestion schema, or falls back to rule-based.
@@ -59,12 +60,23 @@ def ai_suggest(logs_excerpt: str, pod_name: str, namespace: str) -> dict:
         headers = {"Authorization": f"Bearer {api_key}"}
 
         try:
+            # 1) Call the LLM
             resp = requests.post(endpoint, json=payload, headers=headers, timeout=5)
             resp.raise_for_status()
-            content = resp.json()["choices"][0]["message"]["content"]
-            # Validate & parse strict JSON
-            suggestion = Suggestion.parse_raw(content)
+
+            # 2) Extract the raw assistant message
+            raw = resp.json()["choices"][0]["message"]["content"]
+
+            # 3) Strip any leading/trailing Markdown fences
+            text = raw.strip()
+            if text.startswith("```") and text.endswith("```"):
+                lines = text.splitlines()
+                text = "\n".join(lines[1:-1])
+
+            # 4) Parse the _clean_ JSON into your Suggestion model
+            suggestion = Suggestion.parse_raw(text)
             return suggestion.dict()
+
         except (requests.RequestException, ValidationError) as e:
             logger.warning(f"❗ {provider.title()} failed: {e}. Trying next or fallback.")
             continue
