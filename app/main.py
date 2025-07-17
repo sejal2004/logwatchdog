@@ -1,4 +1,7 @@
 # app/main.py
+from dotenv import load_dotenv
+load_dotenv()   # <-- this reads .env into os.environ
+
 import json
 import os
 import logging
@@ -10,9 +13,10 @@ from kubernetes import client, config
 from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from watcher.ai import ai_suggest
+import watcher.ai as ai_module
 from kubernetes import client, config as k8s_config
 from pydantic import BaseModel
+from pydantic import ValidationError
 from watcher.config    import load_config
 from watcher.embeddings import init_embedder
 from watcher.retriever  import init_vectorstore
@@ -38,6 +42,7 @@ MISTRAL_API_KEY = "Ou8iIABg6zPu53XojL54xQOOgAF8QUki"  # Replace with your actual
 
 
 # Function to get suggestions from Mistral API
+
 def fetch_ai_suggestions():
     headers = {
         "Authorization": f"Bearer {MISTRAL_API_KEY}",
@@ -109,53 +114,68 @@ def get_restarted_pods():
 
 
 # — AI-driven suggestion endpoint
-@app.post("/api/suggestion", response_model=Suggestion)
-async def suggestion_endpoint(payload: dict = Body(...)):
-    # 1) Extract fields
+
+@app.post("/api/suggestion", response_model=Suggestion, response_model_exclude={"reasoning"})
+async def suggestion_endpoint(
+    pod_name: str = Body(..., embed=True),
+    namespace: str = Body(..., embed=True),
+    logs: str = Body(..., embed=True),
+):
+    """
+    Take pod_name, namespace and logs from the request body,
+    hand them off to ai_suggest(), and guarantee we always return
+    a fully‐formed Suggestion object.
+    """
     try:
-        pod_name  = payload["pod_name"]
-        namespace = payload["namespace"]
-        logs      = payload["logs"]
-    except KeyError as e:
-        raise HTTPException(status_code=422, detail=f"Missing field: {e.args[0]}")
+        # 1) Call the AI helper
+        import watcher.ai as _ai_mod
+        result = ai_module.ai_suggest(logs, pod_name, namespace)
+        if asyncio.iscoroutine(result):
+            result = await result
 
-    # 2) Dynamic import (so pytest monkeypatch works)
-    from watcher.ai import ai_suggest
+        # 2) Try to validate what came back
+        try:
+            suggestion = Suggestion.model_validate(result)
+        except ValidationError as ve:
+            # If the LLM output was malformed, log and build our own fallback
+            logging.warning("🚨 Suggestion validation failed, falling back: %s", ve)
+            # If ai_suggest returned a custom dict (e.g. {"agent_response": …}), forward it
+            if "agent_response" in result:
+                return JSONResponse(content=result)
 
-    # 3) Call it
-    result = ai_suggest(logs, pod_name, namespace)
+            suggestion = Suggestion(
+                suggestion  = result.get("action", "none"),
+                severity    = result.get("severity", "low"),
+                confidence  = result.get("confidence", 0.0),
+                remediation = result.get("remediation", ""),
+                reasoning   = result.get("reasoning", "") or "Rule‑based fallback after malformed AI output."
+            )
 
-    # 4) If it's a coroutine (i.e. async fake_ai), await it
-    if asyncio.iscoroutine(result):
-        result = await result
+        # 3) (Optional) dump out the chain‑of‑thought
+        logging.getLogger("app").debug("LLM reasoning: %s", suggestion.reasoning)
 
-    # 5) Turn that dict into a Suggestion (fills in missing keys if needed)
-    try:
-        suggestion = Suggestion.parse_obj(result)
+        # 4) Return it
+        return suggestion
+
+    except HTTPException:
+        # Re‑raise any HTTPExceptions we explicitly threw above
+        raise
+
     except Exception:
-        # fallback when ai_suggest returned {"action": "..."}
-        action = result.get("action", "")
-        suggestion = Suggestion(
-            suggestion = action,
-            severity   = "medium",
-            confidence = 0.0,
-            remediation= ""
-        )
-    return suggestion
+        # Catch everything else, log full traceback, return 500
+        logging.exception("💥 Unexpected error in /api/suggestion")
+        raise HTTPException(status_code=500, detail="Internal server error, see logs")
 
-    # 6) Otherwise assume it's already a dict
-    return result
+@app.on_event("startup")
+async def load_vectorstore():
+    """
+    Defer loading of embeddings & vectorstore until AFTER the server is live,
+    so that `uvicorn app.main:app` can start immediately.
+    """
+    global embed_model, vectorstore
+    embed_model  = init_embedder(cfg)
+    vectorstore  = init_vectorstore(cfg, embed_model)
+@app.get("/ping")
+def ping():
+    return {"pong": True}
 
-    # 1) Index this log snippet for future retrieval
-    from watcher.chains.embeddings import index_log_chunks
-    # chunk logs however you like; here’s a simple pass-through:
-    index_log_chunks([logs], [{"pod_name": pod_name, "timestamp": datetime.utcnow().isoformat()}])
-
-    # 2) Run the agent
-    from watcher.chains.agent import run_troubleshooter
-    ai_response = await run_troubleshooter(logs, pod_name, namespace)
-
-    return {"agent_response": ai_response}  
-
-embed_model  = init_embedder(cfg)
-vectorstore  = init_vectorstore(cfg, embed_model)
